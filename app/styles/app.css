@@ -508,3 +508,12 @@ button.reset:hover:not(:has(> *)) {
 .account-logout {
   display: inline-block;
 }
+
+
+
+.header-v2 {
+  position: sticky;
+  top: 0;
+  z-index: 99;
+  background-color: white;
+}

@@ -40,7 +40,20 @@ export default defineConfig({
        * Include 'example-dep' in the array below.
        * @see https://vitejs.dev/config/dep-optimization-options
        */
-      include: [],
+      include: [
+        'ts-easing',
+        'fast-shallow-equal',
+        'react-universal-interface',
+        'screenfull',
+        'nano-css/addon/vcssom/cssToTree',
+        'nano-css/addon/vcssom',
+        'nano-css/addon/cssom',
+        'nano-css',
+        'copy-to-clipboard',
+        'js-cookie',
+        'fast-deep-equal/react',
+        'react-search-autocomplete',
+      ],
     },
   },
 });

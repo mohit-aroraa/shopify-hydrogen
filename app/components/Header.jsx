@@ -1,17 +1,43 @@
-import {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import {Suspense, useId} from 'react';
+import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
-
+import {SEARCH_ENDPOINT, SearchFormPredictive} from '~/components/SearchFormPredictive';
+import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
+import SearchBarV2 from './NewSearch';
+import { ShoppingCartIcon } from '@heroicons/react/24/outline';
+import { ShoppingCartIcon as CartIcon } from '@heroicons/react/24/solid';
 /**
  * @param {HeaderProps}
  */
+
+export function HeaderV2({cart}) {
+  const linkStyle = {
+    fontFamily: `"Fira Code", monospace`,
+    fontSize: '2rem',
+    fontWeight: 'bold',
+    textDecoration: 'none',
+  };
+  return (
+    <header className="header-v2 p-2 grid grid-cols-3 gap-20 items-center">
+      <NavLink to="/" style={linkStyle} end>
+        Local Tressure
+      </NavLink>
+      <SearchBarV2 />
+      <div className="justify-self-end">
+      <CartToggle cart={cart} />
+      </div>
+    </header>
+  );
+}
+
+
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
   return (
     <header className="header">
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
+        {shop.name}
       </NavLink>
       <HeaderMenu
         menu={menu}
@@ -96,7 +122,7 @@ function HeaderCtas({isLoggedIn, cart}) {
           </Await>
         </Suspense>
       </NavLink>
-      <SearchToggle />
+      {/* <SearchToggle /> */}
       <CartToggle cart={cart} />
     </nav>
   );
@@ -114,14 +140,14 @@ function HeaderMenuMobileToggle() {
   );
 }
 
-function SearchToggle() {
-  const {open} = useAside();
-  return (
-    <button className="reset" onClick={() => open('search')}>
-      Search
-    </button>
-  );
-}
+// function SearchToggle() {
+//   const {open} = useAside();
+//   return (
+//     <button className="reset" onClick={() => open('search')}>
+//       Search
+//     </button>
+//   );
+// }
 
 /**
  * @param {{count: number | null}}
@@ -144,8 +170,10 @@ function CartBadge({count}) {
         });
       }}
     >
-      Cart {count === null ? <span>&nbsp;</span> : count}
+
+      {count === null ? <ShoppingCartIcon className='w-5 h-5' /> : <CartIcon className='w-5 h-5' />}
     </a>
+    
   );
 }
 
