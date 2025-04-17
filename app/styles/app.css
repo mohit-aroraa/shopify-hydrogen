@@ -517,3 +517,13 @@ button.reset:hover:not(:has(> *)) {
   z-index: 99;
   background-color: white;
 }
+
+.swiper-pagination-bullet {
+  background-color: #f0f0f0;
+  margin-bottom: 2px !important;
+  opacity: 100;
+}
+.swiper-pagination-bullet.page-active {
+  background-color: #2f3630;
+  opacity: 100;
+}
