@@ -37,12 +37,12 @@ export default (props) => {
             <div className="absolute w-auto inset-0 p-8 flex items-center">
               <div>
                 <h4>{slide.tagline}</h4>
-                <h1 className={`text-[${slide.text_color}] !mb-10 !text-5xl`}>
+                <h1 className={`text-emerald-950 !mb-10 !text-5xl`}>
                   {slide.title}
                 </h1>
                 <a
                   href={slide.cta_link}
-                  className={`px-8 py-4 !text-white rounded-full bg-[${slide.text_color}]`}
+                  className={`px-8 py-4 !text-white rounded-full bg-emerald-950`}
                 >
                   {slide.cta_text}
                 </a>
