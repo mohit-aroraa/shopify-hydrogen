@@ -2,6 +2,8 @@ import {Await, useLoaderData, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
 import Swiper from '~/components/Swiper';
+import CategoriesSlider from '~/components/CategoriesSlider';
+import BestSellers from '~/components/BestSellers';
 
 /**
  * @type {MetaFunction}
@@ -20,12 +22,15 @@ export async function loader(args) {
   const metaObj = await getMetaObjects(args);
   const metaObjects = metaObj.metaobjects.nodes.map(flat)
 
+  const featuredCollections =  await loadFeaturedCollections(args);
+  const recommendedProducts = await loadRecommendedProducts(args);
+  
   // Await the critical data required to render initial state of the page
   // const criticalData = await loadCriticalData(args);
 
   // console.warn('metaobjects' , metaObjects);
 
-  return {metaObjects}
+  return {metaObjects, featuredCollections, recommendedProducts, context: args.context};
 }
 
 async function getMetaObjects({context}) {
@@ -43,6 +48,19 @@ async function getMetaObjects({context}) {
   
   return metaObjects
 }
+
+async function loadFeaturedCollections({context}) {
+  const featuredCollections = await context.storefront
+  .query(FEATURED_COLLECTIONS)
+  .catch((error) => {
+
+    console.error(error);
+    return null;
+  });
+  
+  return featuredCollections.collections.nodes
+}
+
 
 const flat = ({ id, handle, media, ...fields }) => ({
   id,
@@ -74,8 +92,8 @@ async function loadCriticalData({context}) {
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
-  const recommendedProducts = context.storefront
+async function loadRecommendedProducts({context}) {
+  const recommendedProducts = await context.storefront
     .query(RECOMMENDED_PRODUCTS_QUERY)
     .catch((error) => {
       // Log query errors, but don't throw them so the page can still render
@@ -83,17 +101,19 @@ function loadDeferredData({context}) {
       return null;
     });
 
-  return {
-    recommendedProducts,
-  };
-}
+  return recommendedProducts.products.nodes
+};
+
 
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
   return (
-    <div className="home">
+    <div className="home space-y-8">
       <Swiper slides={data.metaObjects} />
+      <CategoriesSlider categories={data.featuredCollections} />
+      <BestSellers context={data.context} products={data.recommendedProducts} />
+
     </div>
   );
 }
@@ -113,7 +133,7 @@ function FeaturedCollection({collection}) {
     >
       {image && (
         <div className="featured-collection-image">
-          <Image data={image} sizes="100vw" />
+          <Image data={image} className='aspect-square' />
         </div>
       )}
       <h1>{collection.title}</h1>
@@ -196,19 +216,20 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
         currencyCode
       }
     }
-    images(first: 1) {
-      nodes {
+    featuredImage {
+      id
+      url(transform: {maxHeight: 400})
+    }
+    variants(first:4) {
+        nodes {
         id
-        url
-        altText
-        width
-        height
-      }
+        title
+        }
     }
   }
   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+    products(first: 20, sortKey: UPDATED_AT, reverse: true, query: "tag:bestseller") {
       nodes {
         ...RecommendedProduct
       }
@@ -264,6 +285,23 @@ metaobjects(first: 10, type: $type) {
   }
 }`
 
+const FEATURED_COLLECTIONS = `#graphql
+query {
+  collections(first: 10) {
+    nodes {
+      id
+      title
+      handle
+      image {
+        id
+        url(transform: {maxHeight:640})
+        altText
+        width
+        height
+      }
+    }
+  }
+}`
 /** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('storefrontapi.generated').FeaturedCollectionFragment} FeaturedCollectionFragment */
