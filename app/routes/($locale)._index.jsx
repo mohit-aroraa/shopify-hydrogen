@@ -4,6 +4,7 @@ import {Image, Money} from '@shopify/hydrogen';
 import Swiper from '~/components/Swiper';
 import CategoriesSlider from '~/components/CategoriesSlider';
 import BestSellers from '~/components/BestSellers';
+import FeaturedCollections from '~/components/FeaturedCollections';
 
 /**
  * @type {MetaFunction}
@@ -18,9 +19,11 @@ export const meta = () => {
 export async function loader(args) {
   // Start fetching non-critical data without blocking time to first byte
   // const deferredData = loadDeferredData(args);
-
-  const metaObj = await getMetaObjects(args);
+  
+  const metaObj = await getMetaObjects(args, 'hero_swiper_content');
   const metaObjects = metaObj.metaobjects.nodes.map(flat)
+
+  const collectionHighlisghts = await getFeaturedCollections(args, 'featured_collection');
 
   const featuredCollections =  await loadFeaturedCollections(args);
   const recommendedProducts = await loadRecommendedProducts(args);
@@ -30,14 +33,29 @@ export async function loader(args) {
 
   // console.warn('metaobjects' , metaObjects);
 
-  return {metaObjects, featuredCollections, recommendedProducts, context: args.context};
+  return {metaObjects, featuredCollections, recommendedProducts, collectionHighlisghts , context: args.context};
 }
 
-async function getMetaObjects({context}) {
+async function getMetaObjects({context}, type) {
   const metaObjects = context.storefront
   .query(METAOBJECT_QUERY , {
     variables: {
-      type: 'hero_swiper_content'
+      type
+    }
+  })
+  .catch((error) => {
+    // Log query errors, but don't throw them so the page can still render
+    console.error(error);
+    return null;
+  });
+  
+  return metaObjects
+}
+async function getFeaturedCollections({context}, type) {
+  const metaObjects = context.storefront
+  .query(FEATURED_COLLECTIONS_QUERY , {
+    variables: {
+      type
     }
   })
   .catch((error) => {
@@ -108,12 +126,13 @@ async function loadRecommendedProducts({context}) {
 export default function Homepage() {
   /** @type {LoaderReturnData} */
   const data = useLoaderData();
+  console.log('data', data);
   return (
     <div className="home space-y-8">
       <Swiper slides={data.metaObjects} />
       <CategoriesSlider categories={data.featuredCollections} />
       <BestSellers context={data.context} products={data.recommendedProducts} />
-
+      <FeaturedCollections collections={data.featuredCollections} />
     </div>
   );
 }
@@ -281,6 +300,53 @@ metaobjects(first: 10, type: $type) {
       value
       }
       
+    }
+  }
+}`
+
+const FEATURED_COLLECTIONS_QUERY = `#graphql 
+query GetMetaObjects ($type: String!) {
+metaobjects(first: 10, type: $type, query:"fields.page:'homepage'") {
+    nodes {
+      id
+      handle
+      media: field(key: "media") {
+      reference {
+        ... on MediaImage {
+          id
+          image {
+            url
+            altText
+            width
+            height
+          }
+        }
+        ... on Video {
+          sources {
+            mimeType
+            url
+          }
+        }
+      }
+      }
+      title: field(key: "title") {
+      value
+      }
+      text_color: field(key: "text_color") {
+      value
+      }
+      cta_color: field(key: "cta_color") {
+      value
+      }
+      cta_url: field(key: "cta_url") {
+      value
+      }
+      cta_text: field(key: "cta_text") {
+      value
+      }
+      tagline: field(key: "tagline") {
+      value
+      }
     }
   }
 }`

@@ -30,6 +30,9 @@ export async function createAppLoadContext(request, env, executionContext) {
     cache,
     waitUntil,
     session,
+    storefront: {
+      apiVersion: '2024-10',
+    },
     i18n: getLocaleFromRequest(request),
     cart: {
       queryFragment: CART_QUERY_FRAGMENT,
