@@ -24,6 +24,8 @@ export async function loader(args) {
   const metaObjects = metaObj.metaobjects.nodes.map(flat)
 
   const collectionHighlisghts = await getFeaturedCollections(args, 'featured_collection');
+  const promotedCollections = collectionHighlisghts.metaobjects.nodes
+  
 
   const featuredCollections =  await loadFeaturedCollections(args);
   const recommendedProducts = await loadRecommendedProducts(args);
@@ -33,7 +35,7 @@ export async function loader(args) {
 
   // console.warn('metaobjects' , metaObjects);
 
-  return {metaObjects, featuredCollections, recommendedProducts, collectionHighlisghts , context: args.context};
+  return {metaObjects, featuredCollections, recommendedProducts, promotedCollections , context: args.context};
 }
 
 async function getMetaObjects({context}, type) {
@@ -52,7 +54,7 @@ async function getMetaObjects({context}, type) {
   return metaObjects
 }
 async function getFeaturedCollections({context}, type) {
-  const metaObjects = context.storefront
+  const featuredCollections = context.storefront
   .query(FEATURED_COLLECTIONS_QUERY , {
     variables: {
       type
@@ -64,7 +66,7 @@ async function getFeaturedCollections({context}, type) {
     return null;
   });
   
-  return metaObjects
+  return featuredCollections
 }
 
 async function loadFeaturedCollections({context}) {
@@ -132,7 +134,7 @@ export default function Homepage() {
       <Swiper slides={data.metaObjects} />
       <CategoriesSlider categories={data.featuredCollections} />
       <BestSellers context={data.context} products={data.recommendedProducts} />
-      <FeaturedCollections collections={data.featuredCollections} />
+      <FeaturedCollections collections={data.promotedCollections} />
     </div>
   );
 }
@@ -304,48 +306,63 @@ metaobjects(first: 10, type: $type) {
   }
 }`
 
-const FEATURED_COLLECTIONS_QUERY = `#graphql 
-query GetMetaObjects ($type: String!) {
-metaobjects(first: 10, type: $type, query:"fields.page:'homepage'") {
+const FEATURED_COLLECTIONS_QUERY = `#graphql
+query GetMetaObjects($type: String!) {
+  metaobjects(first: 10, type: $type) {
     nodes {
       id
       handle
       media: field(key: "media") {
-      reference {
-        ... on MediaImage {
-          id
-          image {
-            url
-            altText
-            width
-            height
+        reference {
+          ... on MediaImage {
+            id
+            image {
+              url
+              altText
+              width
+              height
+            }
+          }
+          ... on Video {
+            sources {
+              mimeType
+              url
+            }
           }
         }
-        ... on Video {
-          sources {
-            mimeType
-            url
-          }
-        }
-      }
       }
       title: field(key: "title") {
-      value
+        value
       }
       text_color: field(key: "text_color") {
-      value
+        value
       }
       cta_color: field(key: "cta_color") {
-      value
+        value
       }
       cta_url: field(key: "cta_url") {
-      value
+        value
       }
       cta_text: field(key: "cta_text") {
-      value
+        value
       }
       tagline: field(key: "tagline") {
-      value
+        value
+      }
+      page: field(key: "page") {
+        value
+      }
+      background_color: field(key: "background_color") {
+        value
+      }
+      collection: field(key: "collection") {
+        reference {
+          ... on Collection {
+          id
+          title
+          handle          
+          }
+        }
       }
     }
   }
